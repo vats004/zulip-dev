@@ -1,0 +1,48 @@
+{
+    "compilerOptions": {
+        /* Type Checking */
+        "exactOptionalPropertyTypes": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noUncheckedIndexedAccess": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "strict": true,
+
+        /* Modules */
+        "moduleResolution": "node",
+        "paths": {
+            "*": ["./web/src/types/*"],
+        },
+        "resolveJsonModule": true,
+        "types": ["@types/jquery.validation"],
+
+        /* Emit */
+        "noEmit": true,
+
+        /* Interop Constraints */
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+
+        /* Language and Environment */
+        "target": "ESNext",
+
+        /* Projects */
+        "composite": true,
+    },
+    "exclude": [
+        // Type stubs are not part of the top-level project.
+        "web/src/types",
+
+        // Skip walking large generated directories.
+        "docs/_build",
+        "static/webpack-bundles",
+        "var",
+        "zulip-py3-venv",
+
+        // Even though allowJs defaults to false, typescript-eslint forces it to true.
+        "**/*.js",
+    ],
+}
