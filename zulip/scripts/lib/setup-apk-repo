@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -x
+set -e
+
+# Ensure the directory for LAST_DEPENDENCIES_HASH exists
+mkdir -p /var/lib/zulip
+
+# All paths, for purposes of hashing, should be relative to the deploy root.
+cd "$(dirname "$0")/../.."
+
+LIST_PATH="scripts/setup/apk-repos"
+if ! [ -d "$LIST_PATH" ]; then
+    echo "Not a valid value for --list: '$LIST'"
+    echo ""
+    echo "Valid values are:"
+    ls -1 "scripts/setup/apk-repos/"
+    exit 1
+fi
+
+DEPENDENCIES_HASH="$(sha256sum "$LIST_PATH"/*)"
+DEPENDENCIES_HASH_FILE="/var/lib/zulip/setup-repositories-state-apk"
+# Ensure that DEPENDENCIES_HASH_FILE exists before hashing it.
+touch "$DEPENDENCIES_HASH_FILE"
+LAST_DEPENDENCIES_HASH="$(cat "$DEPENDENCIES_HASH_FILE")"
+
+# First, we only do anything in setup-apk-repo if any of its inputs changed.
+if [ "$DEPENDENCIES_HASH" = "$LAST_DEPENDENCIES_HASH" ]; then
+    exit 0
+fi
+
+# Update the APK repositories and install necessary packages
+apk update
+apk add --no-cache $(cat "$LIST_PATH/packages.txt")
+
+echo "$DEPENDENCIES_HASH" >"$DEPENDENCIES_HASH_FILE"

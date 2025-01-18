@@ -30,6 +30,77 @@ VENV_DEPENDENCIES = [
     "libvips",  # For thumbnailing
 ]
 
+# VENV_DEPENDENCIES defined again for alpine: 
+# build-essential and libldap2-dev are not available for alpine
+# ALPINE_VENV_DEPENDENCIES = [
+#     "build-base", # apk name for build-essential for alpine(build-base) .....................
+#     "libffi-dev",
+#     "openldap-dev", # libldap2-dev for alpine(openldap-dev) .....................
+#     "python3-dev",  # Needed to install typed-ast dependency of mypy
+#     "python3-pip",
+#     "virtualenv",
+#     "libxml2-dev",  # Used for installing talon-core and python-xmlsec
+#     "libxslt1-dev",  # Used for installing talon-core
+#     "libpq-dev",  # Needed by psycopg2
+#     "libssl-dev",  # Needed to build pycurl and other libraries
+#     "libmagic1",  # Used for install python-magic
+#     "libyaml-dev",  # For fast YAML parsing in PyYAML
+#     # Needed by python-xmlsec:
+#     "libxmlsec1-dev",
+#     "pkg-config",
+#     "jq",  # No longer used in production (clean me up later)
+#     "libsasl2-dev",  # For building python-ldap from source
+#     "libvips",  # For thumbnailing
+#     "libtool" # libtool-ltdl-dev for alpine(libtool) .....................
+# ]
+
+
+# VENV_DEPENDENCIES defined again for alpine: 
+ALPINE_VENV_DEPENDENCIES = [
+    "build-base",            # Equivalent to build-essential
+    "libffi-dev",
+    "openldap-dev",          # Equivalent to libldap2-dev or openldap-devel
+    "python3-dev",
+    "py3-pip",               # Equivalent to python3-pip
+    "py3-virtualenv",        # Combining virtualenv and python-virtualenv
+    "libxslt-dev",           # Equivalent to libxslt1-dev or libxslt-devel
+    "postgresql-dev",        # Equivalent to libpq-dev or postgresql-libs
+    "openssl-dev",           # Equivalent to libssl-dev
+    "file",                  # Equivalent to libmagic1
+    "yaml-dev",              # Equivalent to libyaml-dev or libyaml-devel
+    "xmlsec-dev",            # Equivalent to libxmlsec-dev
+    "pkgconf",               # Equivalent to pkg-config
+    "jq",                    # Same name
+    "cyrus-sasl-dev",        # Equivalent to libsasl2-dev
+    "vips-dev",              # Equivalent to libvips
+    "gcc",                   # Same name
+    "libxml2-dev",           # Same name
+    "libtool",               # Equivalent to libtool-ltdl-devel
+]
+
+# ALPINE_VENV_DEPENDENCIES = [
+#     "build-base",  # Equivalent to build-essential
+#     "libffi-dev",
+#     "openldap-dev",  # Equivalent to libldap2-dev / openldap-devel
+#     "python3-dev",  # Needed to install typed-ast dependency of mypy
+#     "py3-pip",  # Equivalent to python3-pip
+#     "py3-virtualenv",  # Equivalent to virtualenv
+#     "libxml2-dev",  # Used for installing talon-core and python-xmlsec
+#     "libxslt-dev",  # Used for installing talon-core
+#     "postgresql-dev",  # Equivalent to libpq-dev / postgresql-libs
+#     "openssl-dev",  # Equivalent to libssl-dev / openssl-devel
+#     "file",  # Equivalent to libmagic1 (provides libmagic)
+#     "yaml-dev",  # Equivalent to libyaml-dev / libyaml-devel
+#     "pkgconf",  # Equivalent to pkg-config
+#     "jq",  # No longer used in production (clean me up later)
+#     "cyrus-sasl-dev",  # Equivalent to libsasl2-dev
+#     "vips-dev",  # For thumbnailing
+#     "gcc",  # Needed by python-xmlsec
+#     "libtool",  # Equivalent to libtool-ltdl-devel
+#     "xmlsec-dev",  # Equivalent to xmlsec1-devel
+#     "xmlsec-dev",  # Equivalent to xmlsec-openssl-devel
+# ] 
+
 COMMON_YUM_VENV_DEPENDENCIES = [
     "libffi-devel",
     "openldap-devel",
@@ -68,6 +139,8 @@ def get_venv_dependencies(vendor: str, os_version: str) -> list[str]:
         return REDHAT_VENV_DEPENDENCIES
     elif "fedora" in os_families():
         return FEDORA_VENV_DEPENDENCIES
+    elif "alpine" in os_families():
+        return ALPINE_VENV_DEPENDENCIES
     else:
         raise AssertionError("Invalid vendor")
 

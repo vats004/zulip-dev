@@ -86,6 +86,8 @@ elif vendor == "rhel" and os_version.startswith("7."):
     POSTGRESQL_VERSION = "10"
 elif vendor == "centos" and os_version == "7":
     POSTGRESQL_VERSION = "10"
+elif vendor == "alpine" and os_version == "3.20.2":
+    POSTGRESQL_VERSION = "16"
 else:
     logging.critical("Unsupported platform: %s %s", vendor, os_version)
     sys.exit(1)
@@ -147,6 +149,80 @@ COMMON_YUM_DEPENDENCIES = [
     # Puppeteer dependencies end here.
 ]
 
+# ALPINE_SYSYTEM_DEPENDENCIES = [
+#     "memcached",
+#     "rabbitmq-server",
+#     "supervisor",
+#     "git",
+#     "curl",
+#     "ca-certificates",
+#     "gettext",
+#     "moreutils",
+#     "unzip",
+#     "crudini",
+#     "xdg-utils",
+#     "redis",
+#     "hunspell-en-us",
+#     "default-jre-headless",
+#     "fonts-freefont-ttf",
+#     "libatk-bridge2.0-0",
+#     "libgbm1",
+#     "libgtk-3-0",
+#     "libx11-xcb1",
+#     "libxcb-dri3-0",
+#     "libxss1",
+#     "xvfb",
+#     "nmap-ncat",
+#     "ccache",
+#     "at-spi2-atk",
+#     "GConf2",
+#     "gtk3",
+#     "libX11-xcb",
+#     "libxcb",
+#     "libXScrnSaver",
+#     "mesa-libgbm",
+#     "xorg-x11-server-Xvfb",
+#     "rubygem-puppet-lint",
+#     "puppet",
+#     "puppet-lint",
+# ]
+
+ALPINE_COMMON_DEPENDENCIES_VIA_APK = [
+    "memcached",
+    "rabbitmq-server",
+    "supervisor",
+    "git",
+    "curl",
+    "ca-certificates",
+    "gettext",
+    "unzip",
+    "xdg-utils",
+    "redis",
+    "hunspell-en",
+    "openjdk11-jre-headless",
+    "ttf-freefont",
+    "at-spi2-core",
+    "mesa-gbm",
+    "gtk+3.0",
+    "libx11",
+    "libxcb",
+    "xvfb",
+    "ccache",
+    "parallel",
+    "apkbuild-gem-resolver", # Required for resolving gem dependencies
+    "pipx", # Required for installing pip dependencies
+]
+
+ALPINE_COMMON_DEPENDENCIES_VIA_GEM = [
+    "puppet",
+    "puppet-lint",
+] 
+
+ALPINE_COMMON_DEPENDENCIES_VIA_PIP = [
+    "crudini",
+    "pyxss",
+]
+
 BUILD_GROONGA_FROM_SOURCE = False
 BUILD_PGROONGA_FROM_SOURCE = False
 if (vendor == "debian" and os_version in []) or (vendor == "ubuntu" and os_version in []):
@@ -199,6 +275,20 @@ elif "fedora" in os_families():
     BUILD_GROONGA_FROM_SOURCE = True
     BUILD_PGROONGA_FROM_SOURCE = True
 
+elif "alpine" in os_families(): # for alpine !!!
+    SYSTEM_DEPENDENCIES = [
+        *ALPINE_COMMON_DEPENDENCIES_VIA_APK,
+        f"postgresql{POSTGRESQL_VERSION}",
+        f"postgresql{POSTGRESQL_VERSION}-dev",
+        f"postgresql{POSTGRESQL_VERSION}-contrib",
+        f"postgresql{POSTGRESQL_VERSION}-openrc",
+        "msgpack-c-dev",
+        "clang",
+        *VENV_DEPENDENCIES,
+    ]
+    BUILD_GROONGA_FROM_SOURCE = True
+    BUILD_PGROONGA_FROM_SOURCE = True
+
 if "fedora" in os_families():
     TSEARCH_STOPWORDS_PATH = f"/usr/pgsql-{POSTGRESQL_VERSION}/share/tsearch_data/"
 else:
@@ -221,6 +311,10 @@ def install_system_deps() -> None:
         install_yum_deps(deps_to_install)
     elif "debian" in os_families():
         install_apt_deps(deps_to_install)
+    elif "alpine" in os_families():
+        install_apk_deps(deps_to_install)
+        install_gem_deps()
+        install_pip_deps()
     else:
         raise AssertionError("Invalid vendor")
 
@@ -337,6 +431,28 @@ def install_yum_deps(deps_to_install: list[str]) -> None:
             f"/usr/pgsql-{POSTGRESQL_VERSION}/share/tsearch_data/en_us.affix",
         ]
     )
+
+# custom function for alpine to install dependencies - considering that apk is very simple
+def install_apk_deps(deps_to_install: list[str]) -> None:
+    run_as_root(["apk", "update"])
+    # run_as_root(["./scripts/lib/setup-apk-repo"])
+    run_as_root(["apk", "add", *deps_to_install])
+
+def install_gem_deps() -> None:
+    # Install puppet-lint
+    run_as_root(["gem", "install", "puppet-lint", "--no-document"])
+    # Install puppet
+    run_as_root(["gem", "install", "puppet", "--no-document"])
+
+def install_pip_deps() -> None:
+    # Install crudini
+    run_as_root(["pipx", "install", "crudini"])
+    # Install pyxss
+    run_as_root(["pipx", "install", "pyxss"])
+    # run as root : pipx ensurepath - to add pipx to PATH
+    run_as_root(["pipx", "ensurepath"])
+    # run as root : source ~/.bashrc - to source the bashrc file
+    run_as_root(["source", "~/.bashrc"])
 
 
 def main(options: argparse.Namespace) -> NoReturn:
