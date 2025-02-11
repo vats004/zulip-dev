@@ -210,7 +210,10 @@ ALPINE_COMMON_DEPENDENCIES_VIA_APK = [
     "ccache",
     "parallel",
     "apkbuild-gem-resolver", # Required for resolving gem dependencies
-    "pipx", # Required for installing pip dependencies
+    "pipx", # Required for installing pip dependencies``
+    "libxscrnsaver",
+    "libxscrnsaver-dev",
+    "libxscrnsaver-doc",
 ]
 
 ALPINE_COMMON_DEPENDENCIES_VIA_GEM = [
@@ -220,7 +223,6 @@ ALPINE_COMMON_DEPENDENCIES_VIA_GEM = [
 
 ALPINE_COMMON_DEPENDENCIES_VIA_PIP = [
     "crudini",
-    "pyxss",
 ]
 
 BUILD_GROONGA_FROM_SOURCE = False
@@ -447,12 +449,14 @@ def install_gem_deps() -> None:
 def install_pip_deps() -> None:
     # Install crudini
     run_as_root(["pipx", "install", "crudini"])
-    # Install pyxss
-    run_as_root(["pipx", "install", "pyxss"])
+    # run this as root : export PATH=/root/.local/bin:$PATH
+    run_as_root(["export", "PATH=/root/.local/bin:$PATH"])
+    # run as root : echo 'export "PATH=$PATH:my_path"' >> /etc/profile
+    run_as_root(["echo", "export 'PATH=$PATH:/root/.local/bin' >> /etc/profile"])
     # run as root : pipx ensurepath - to add pipx to PATH
     run_as_root(["pipx", "ensurepath"])
     # run as root : source ~/.bashrc - to source the bashrc file
-    run_as_root(["source", "~/.bashrc"])
+    # run_as_root(["source", "~/.bashrc"])
 
 
 def main(options: argparse.Namespace) -> NoReturn:
